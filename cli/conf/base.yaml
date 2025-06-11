@@ -11,10 +11,10 @@ tts:
   lang: "en-gb"
 
 llm:
-  #model_path: "/home/vsrinivasan/Projects/assistants/models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf"
-  #model_path: "/home/vsrinivasan/Projects/assistants/models/tinyllama-1.1b-chat-v1.0.Q5_K_M.gguf"
-  #model_path: "/home/vsrinivasan/Projects/assistants/models/mistral-7b-instruct-v0.1.Q4_K_M.gguf"
-  model_path: "/home/vsrinivasan/Projects/assistants/models/phi-2.Q4_K_M.gguf"
+  #model_path: "./models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf"
+  #model_path: "./models/tinyllama-1.1b-chat-v1.0.Q5_K_M.gguf"
+  #model_path: "./models/mistral-7b-instruct-v0.1.Q4_K_M.gguf"
+  model_path: "./models/phi-2.Q4_K_M.gguf"
   n_ctx: 512
 
 stream:
