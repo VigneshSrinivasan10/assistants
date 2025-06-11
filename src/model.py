@@ -5,7 +5,7 @@ from fastrtc import get_stt_model, get_tts_model, KokoroTTSOptions, AdditionalOu
 from fastrtc_whisper_cpp import get_stt_model as get_stt_model_whisper_cpp
 from llama_cpp import Llama
 
-from util import timer
+from src.util import timer
 
 class STT:
     def __init__(self, stt_model: str = "moonshine/base"):

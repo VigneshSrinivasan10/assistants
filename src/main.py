@@ -1,8 +1,8 @@
 from fastrtc import Stream, ReplyOnPause, ReplyOnStopWords, AlgoOptions, SileroVadOptions
 from fastrtc import get_twilio_turn_credentials
 from gradio.utils import get_space
-from model import VoiceAssistant
-from logger import setup_logging
+from src.model import VoiceAssistant
+from src.logger import setup_logging
 
 import json
 import hydra
@@ -13,7 +13,7 @@ import logging
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse, StreamingResponse
 
-@hydra.main(config_path="../cli/conf", config_name="base")
+@hydra.main(config_path="./cli/conf", config_name="base")
 def main(cfg: DictConfig):
     setup_logging()
     logger = logging.getLogger(__name__)
