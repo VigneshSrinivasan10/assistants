@@ -78,6 +78,10 @@ Kokoro used within the library `fastrtc`.
 ```
 assistant
 ```
+and then open the link: 
+```
+http://127.0.0.1:7860
+```
 
 ## How It Works
 
