@@ -40,17 +40,15 @@ assistants/
 
 2. Install the package:
    ```
-   uv venv venv
-   source venv/bin/activate 
-   uv pip install -e .
-   uv pip install -e ".[dev]"
-
+   uv sync
+   source .venv/bin/activate 
    ```
 3. Download the LLM of choice: 
    ```
    mkdir models
    cd models
    wget https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.1-GGUF/resolve/main/mistral-7b-instruct-v0.1.Q4_K_M.gguf
+   cd ..
    ```
 
 ## Configuration

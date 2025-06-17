@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "assistants"
 version = "0.1.0"
@@ -5,28 +9,32 @@ description = "A low-latency voice assistant that listens for commands and respo
 authors = [
     { name = "Vignesh Srinivasan", email = "vignesh.mssrinivasan@example.com" }
 ]
-
 dependencies = [
-    "fastapi==0.115.12",
-    "fastrtc==0.0.26",
-    "fastrtc_whisper_cpp==0.1.2",
-    "gradio==5.33.1",
-    "hydra-core==1.3.2",
+    "fastapi",
+    "fastrtc_whisper_cpp",
+    "gradio",
+    "hydra-core",
     "numpy==2.2.0",
-    "omegaconf==2.3.0",
-    "uvicorn==0.34.3",
-    "fastrtc[stt,vad,tts,stopword]",
+    "omegaconf",
+    "uvicorn",
+    "fastrtc>=0.0.26",
+    "fastrtc[vad]",
+    "fastrtc[stopword]",
     "llama-cpp-python",
+    "torch==2.7.1+cpu",
+    "soxr",
+    "kokoro_onnx",
 ]
 
-[project.optional-dependencies]
-dev = [
-    "pytest>=7.0.0",
-    "black>=22.0.0",
-    "isort>=5.0.0",
-    "flake8>=4.0.0",
-    "mypy>=0.900",
+[tool.uv.sources]
+torch = [
+    { index = "pytorch-cpu" },
 ]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
 
 [tool.setuptools]
 packages = ["src"]  # Specify only the package(s) you want
