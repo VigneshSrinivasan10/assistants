@@ -78,17 +78,26 @@ Kokoro used within the library `fastrtc`.
 ```
 assistant
 ```
-and then open the link: 
+Then open the link on your favorite browser: 
 ```
 http://127.0.0.1:7860
 ```
+and click on `start conversation`.  
 
-## How It Works
+## How it works
 
 1. The assistant continuously listens for the wake word "computer"
-2. When detected, it transcribes what you speak until after a pause
-3. It quearies the transcription to an LLM
+2. When detected, it transcribes what you speak
+3. It queries the transcription to an LLM
 4. Converts the output of the LLM to audio and responds
+
+E.g.: 
+```
+User: Computer(wake-word), what is the capital of Japan.
+Response: The capital of Japan is Tokyo.
+```
+![Example Conversation](images/example_conversation.png)
+
 
 ## License
 
