@@ -1,5 +1,5 @@
 stt:
-  model: "base.en" #"moonshine/base"
+  model: "small.en-q5_1" #"moonshine/base"
   language: "en-us"
   beam_size: 2
   vad_filter: true
@@ -11,10 +11,10 @@ tts:
   lang: "en-gb"
 
 llm:
-  #model_path: "./models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf"
-  #model_path: "./models/tinyllama-1.1b-chat-v1.0.Q5_K_M.gguf"
-  #model_path: "./models/mistral-7b-instruct-v0.1.Q4_K_M.gguf"
-  model_path: "${hydra:runtime.cwd}/models/phi-2.Q4_K_M.gguf"
+  #model_path: "${hydra:runtime.cwd}/models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf"
+  #model_path: "${hydra:runtime.cwd}/models/tinyllama-1.1b-chat-v1.0.Q5_K_M.gguf"
+  model_path: "${hydra:runtime.cwd}/models/mistral-7b-instruct-v0.1.Q4_K_M.gguf"
+  #model_path: "${hydra:runtime.cwd}/models/phi-2.Q4_K_M.gguf"
   n_ctx: 512
 
 stream:
@@ -24,8 +24,8 @@ stream:
   can_interrupt: true
   algo_options:
     audio_chunk_duration: 0.6
-    started_talking_threshold: 0.1
-    speech_threshold: 0.2
+    started_talking_threshold: 0.2
+    speech_threshold: 0.1
   model_options:
     threshold: 0.5
     min_speech_duration_ms: 250
