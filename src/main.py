@@ -1,19 +1,20 @@
+import json
+import logging
+import hydra
+from omegaconf import DictConfig, OmegaConf
+
+from gradio.utils import get_space
 from fastrtc import Stream, ReplyOnPause, ReplyOnStopWords, AlgoOptions, SileroVadOptions
 from fastrtc import get_twilio_turn_credentials
-from gradio.utils import get_space
 from src.model import VoiceAssistant
 from src.logger import setup_logging
 
-import json
-import hydra
-from omegaconf import DictConfig, OmegaConf
-import logging
-
-
+import uvicorn
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse, StreamingResponse
+from importlib.resources import files
 
-@hydra.main(config_path="./cli/conf", config_name="base")
+@hydra.main(config_path="cli/conf", config_name="base")
 def main(cfg: DictConfig):
     setup_logging()
     logger = logging.getLogger(__name__)
@@ -50,7 +51,7 @@ def main(cfg: DictConfig):
 
     stop_word_handler = ReplyOnStopWords(
         on_wake_word_detected,
-        stop_words=["computer"],  # Add your desired wake words here
+        stop_words=[cfg.stream.wake_word],  # Add your desired wake words here
         input_sample_rate=16000,  # Required for stop word detection
         algo_options=AlgoOptions(
             audio_chunk_duration=cfg.stream.algo_options.audio_chunk_duration,
@@ -77,18 +78,14 @@ def main(cfg: DictConfig):
     )
 
     # Launch the UI
-    #stream.ui.launch()
-
-
     app = FastAPI()
 
     stream.mount(app)
 
-
     @app.get("/")
     async def _():
         rtc_config = get_twilio_turn_credentials() if get_space() else None
-        html_content = open("/home/vsrinivasan/Projects/assistants/src/index.html").read()
+        html_content = files('src').joinpath('index.html').read_text()
         html_content = html_content.replace("__RTC_CONFIGURATION__", json.dumps(rtc_config))
         return HTMLResponse(content=html_content)
 
@@ -103,8 +100,6 @@ def main(cfg: DictConfig):
 
         return StreamingResponse(output_stream(), media_type="text/event-stream")
     
-    import uvicorn
-
     uvicorn.run(app, port=7860)
 if __name__ == "__main__":
     main()

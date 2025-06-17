@@ -16,16 +16,17 @@ A low-latency voice assistant that listens for commands and responds.
 assistants/
 ├── README.md
 ├── src/
+│   ├── cli/
+│   │   ├── __init__.py
+│   │   └── conf/
+│   │       ├── __init__.py
+│   │       └── base.yaml
 │   ├── __init__.py
 │   ├── main.py
 │   ├── model.py
 │   ├── util.py
 │   └── index.html
-└── cli/
-    ├── __init__.py
-    └── conf/
-    |  ├── __init__.py
-    |  └── base.yaml
+
 ```
 
 ## Installation
@@ -41,10 +42,21 @@ assistants/
    uv venv venv
    source venv/bin/activate 
    uv pip install -e .
+   uv pip install -e ".[dev]"
+
+   ```
+3. Download the LLM of choice: 
+   ```
+   mkdir models
+   cd models
+   wget https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.1-GGUF/resolve/main/mistral-7b-instruct-v0.1.Q4_K_M.gguf
    ```
 
-## Usage
 
+## Usage
+```
+assistant
+```
 
 ## How It Works
 
@@ -55,7 +67,7 @@ assistants/
 
 ## Configuration
 
-All configuration is stored in `assistant/cli/conf/base.yaml`:
+All configuration is stored in `assistant/src/cli/conf/base.yaml`:
 
 ## License
 
