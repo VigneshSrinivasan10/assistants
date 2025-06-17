@@ -15,7 +15,7 @@ A low-latency voice assistant that listens for commands and responds.
 ```
 assistants/
 ├── README.md
-├── pyprojecy.toml
+├── pyproject.toml
 ├── src/
 │   ├── cli/
 │   │   ├── __init__.py
