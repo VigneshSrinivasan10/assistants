@@ -24,6 +24,7 @@ dependencies = [
     "torch==2.7.1+cpu",
     "soxr",
     "kokoro_onnx",
+    "poethepoet>=0.35.0",
 ]
 
 [tool.uv.sources]
@@ -41,3 +42,53 @@ packages = ["src"]  # Specify only the package(s) you want
 
 [project.scripts]
 assistant = "src.main:main"
+
+[tool.poe.tasks]
+install = """
+python -c "
+import os, subprocess, sys
+venv_dir = '.venv'
+if not os.path.exists(venv_dir):
+    print('🧪 Creating virtual environment...')
+    subprocess.run([sys.executable, '-m', 'venv', venv_dir], check=True)
+
+activate = os.path.join(venv_dir, 'Scripts' if os.name == 'nt' else 'bin', 'activate_this.py')
+exec(open(activate).read(), {'__file__': activate})
+
+try:
+    import uv
+except ImportError:
+    print('📦 uv not found. Installing...')
+    subprocess.run([sys.executable, '-m', 'pip', 'install', 'uv'], check=True)
+
+print('🔧 Syncing dependencies...')
+subprocess.run([sys.executable, '-m', 'uv', 'sync'], check=True)
+"
+"""
+
+download-llm = """
+mkdir -p models && \
+cd models && \
+wget -nc https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.1-GGUF/resolve/main/mistral-7b-instruct-v0.1.Q4_K_M.gguf  && \
+cd ..
+"""
+
+run = { shell = "bash -c 'source .venv/bin/activate && assistant'" }
+
+start = [
+  "install",
+  "download-llm",
+  "run"
+]
+
+smart-run = """
+python -c '
+import os
+if not os.path.exists(".venv") or not os.path.exists("models/mistral-7b-instruct-v0.1.Q4_K_M.gguf"):
+    print("🔧 First-time setup...")
+    os.system("poe start")
+else:
+    print("🚀 Launching assistant...")
+    os.system("poe run")
+'
+"""
