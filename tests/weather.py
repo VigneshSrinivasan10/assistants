@@ -18,7 +18,7 @@ def test_weather_queries():
     """Test function for weather queries."""
     try:
         # Test with Open-Meteo (no API key needed)
-        print("Testing with Open-Meteo (free, no API key required):")
+        print("Testing with Open-Meteo:")
         weather = WeatherForecast(provider="openmeteo")
         
         test_queries = [
@@ -26,7 +26,8 @@ def test_weather_queries():
             "Is it raining now?",
             "the weather in the evening?",
             "the weather in London?",
-            "the weather tomorrow"
+            "the weather tomorrow",
+            "the rain and day" # just to check errors from transcription
         ]
         
         for query in test_queries:
@@ -103,7 +104,7 @@ def test_weather_detection():
             "What time is it?",     # Non-weather query
             "The weather is nice today",
             "Temperature is 25 degrees",
-            "It's raining outside"
+            "It's raining outside",
         ]
         
         for text in test_texts:

@@ -387,43 +387,29 @@ class WeatherForecast:
     
     def _extract_location(self, text: str) -> str:
         """
-        Extract location from natural language text.
-        
-        Args:
-            text: Natural language text containing location
-            
-        Returns:
-            Extracted location string
+        Simple location extraction focused on Berlin and major cities.
         """
-        # Common patterns for location extraction
-        patterns = [
-            r'in\s+([A-Za-z\s,]+?)(?:\s+now|\s+tonight|\s+this\s+evening|\s+tomorrow|\s+in\s+\d+\s+hours?|[?!.,]|$)',
-            r'weather\s+in\s+([A-Za-z\s,]+?)(?:\s+now|\s+tonight|\s+this\s+evening|\s+tomorrow|\s+in\s+\d+\s+hours?|[?!.,]|$)',
-            r'([A-Za-z\s,]+?)\s+weather(?:\s+now|\s+tonight|\s+this\s+evening|\s+tomorrow|\s+in\s+\d+\s+hours?|[?!.,]|$)',
-        ]
+        text_lower = text.lower()
         
-        for pattern in patterns:
-            match = re.search(pattern, text, re.IGNORECASE)
-            if match:
-                location = match.group(1).strip()
-                # Clean up common words that might be captured
-                # Also filter out time-related words that should not be treated as locations
-                location = re.sub(r'\b(what\'?s?|the|is|it|raining|snowing|sunny|cloudy|weather|evening|morning|afternoon|night|tonight|tomorrow|now|today)\b', '', location, flags=re.IGNORECASE)
-                location = location.strip(' ,.')
-                if location:
-                    return location
+        # Check for Berlin first (most common case)
+        if 'berlin' in text_lower:
+            return "Berlin"
         
-        # If no pattern matches, try to extract any capitalized words (likely city names)
-        words = text.split()
-        potential_locations = []
-        for word in words:
-            if word[0].isupper() and len(word) > 2:
-                potential_locations.append(word)
+        # Check for other major German cities
+        german_cities = ['munich', 'hamburg', 'cologne', 'frankfurt', 'stuttgart', 
+                        'düsseldorf', 'dortmund', 'leipzig', 'bremen', 'dresden']
         
-        if potential_locations:
-            return ' '.join(potential_locations)
+        for city in german_cities:
+            if city in text_lower:
+                return city.title()
         
-        # Default to Berlin if no location is found
+        # Check for international cities
+        international_cities = ['london', 'paris', 'new york', 'tokyo', 'sydney']
+        for city in international_cities:
+            if city in text_lower:
+                return city.title()
+        
+        # If no specific city mentioned, default to Berlin
         return "Berlin"
     
     def get_current_weather(self, location: str) -> Dict:
@@ -569,7 +555,7 @@ def test_weather_queries():
     """Test function for weather queries."""
     try:
         # Test with Open-Meteo (no API key needed)
-        print("Testing with Open-Meteo (free, no API key required):")
+        print("Testing with Open-Meteo:")
         weather = WeatherForecast(provider="openmeteo")
         
         test_queries = [
