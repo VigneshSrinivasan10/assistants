@@ -13,20 +13,27 @@ A low-latency voice assistant that listens for commands and responds.
 ## Project Structure
 
 ```
-assistants/
-├── README.md
-├── pyproject.toml
-├── src/
-│   ├── cli/
-│   │   ├── __init__.py
-│   │   └── conf/
-│   │       ├── __init__.py
-│   │       └── base.yaml
-│   ├── __init__.py
-│   ├── main.py
-│   ├── model.py
-│   ├── util.py
-│   └── index.html
+└── assistants/
+    ├── README.md
+    ├── pyproject.toml
+    ├── src/
+    │   ├── __init__.py
+    │   ├── index.html
+    │   ├── logger.py
+    │   ├── main.py
+    │   ├── model.py
+    │   ├── util.py
+    │   ├── cli/
+    │   │   ├── __init__.py
+    │   │   └── conf/
+    │   │       ├── __init__.py
+    │   │       └── base.yaml
+    │   └── features/
+    │       ├── __init__.py
+    │       └── weather.py
+    └── tests/
+        ├── __init__.py
+        └── weather.py
 
 ```
 
