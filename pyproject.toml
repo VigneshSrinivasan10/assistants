@@ -6,6 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "assistants"
 version = "0.1.0"
 description = "A low-latency voice assistant that listens for commands and responds"
+requires-python = ">=3.10"
 authors = [
     { name = "Vignesh Srinivasan", email = "vignesh.mssrinivasan@example.com" }
 ]
@@ -25,6 +26,8 @@ dependencies = [
     "soxr",
     "kokoro_onnx",
     "poethepoet>=0.35.0",
+    "requests",
+    "pytest",
 ]
 
 [tool.uv.sources]
@@ -42,6 +45,13 @@ packages = ["src"]  # Specify only the package(s) you want
 
 [project.scripts]
 assistant = "src.main:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
 
 [tool.poe.tasks]
 install = """
@@ -92,3 +102,12 @@ else:
     os.system("poe run")
 '
 """
+
+#test = "pytest tests/ -v"
+
+test-weather = "python tests/weather.py"
+
+test-all = [
+  #"test",
+  "test-weather"
+]
