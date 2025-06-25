@@ -5,10 +5,10 @@ A low-latency voice assistant that listens for commands and responds.
 ## Features
 
 - Responds to questions
+- Checks weather status 
 
 ### To do
 - Fast song search and playback on Spotify
-- Check weather status 
 
 ## Project Structure
 

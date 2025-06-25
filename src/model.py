@@ -1,11 +1,13 @@
 import numpy as np
 from omegaconf import DictConfig
+import re
 
 from fastrtc import get_stt_model, get_tts_model, KokoroTTSOptions, AdditionalOutputs
 from fastrtc_whisper_cpp import get_stt_model as get_stt_model_whisper_cpp
 from llama_cpp import Llama
 
 from src.util import timer
+from src.features.weather import WeatherForecast
 
 class STT:
     def __init__(self, stt_model: str = "moonshine/base"):
@@ -44,6 +46,7 @@ class LLM:
             f"<|user|>\n{prompt}\n<|end|>\n"
             f"<|assistant|>\n"
         )
+        
         response = self.llm(text_prompt, 
                             temperature=0.2, 
                             top_p=0.9, 
@@ -59,6 +62,10 @@ class VoiceAssistant:
         self.stt = STT(cfg.stt.model)
         self.tts = TTS(cfg.tts.model, cfg.tts.voice, cfg.tts.speed, cfg.tts.lang)
         self.llm = LLM(cfg.llm.model_path, cfg.llm.n_ctx)
+        
+        # Initialize features here such as weather forecast, etc.
+        self.weather = WeatherForecast(provider="openmeteo")
+        
         self.latest_transcription = None
         self.latest_response = None
 
@@ -68,12 +75,18 @@ class VoiceAssistant:
         self.latest_transcription = transcription
         print(f"Transcription: {transcription}")
 
-        yield AdditionalOutputs({"role": "user", "content": transcription})
-     
+        yield AdditionalOutputs({"role": "user", "content": transcription})     
 
         if transcription not in ["", " ", None]:
-            # LLM generate response
-            response_text = self.llm.generate(transcription)
+
+            if self.weather._is_weather_query(transcription):
+                print(f"Weather query detected, routing to weather system...")
+                # Route to weather forecast
+                response_text = self.weather.process_weather_query(transcription)
+            else: 
+                # LLM generate response
+                response_text = self.llm.generate(transcription)
+                
             self.latest_response = response_text
             print(f"Response: {response_text}")
             
