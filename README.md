@@ -45,17 +45,13 @@ A low-latency voice assistant that listens for commands and responds.
    cd assistants
    ```
 
-2. Install the package:
+2. Install poethepoet:
    ```
-   uv sync
-   source .venv/bin/activate 
+   pipx install poethepoet 
    ```
-3. Download the LLM of choice: 
+3. Poe will then install the `.venv`, download the LLM and start the voice assistant: 
    ```
-   mkdir models
-   cd models
-   wget https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.1-GGUF/resolve/main/mistral-7b-instruct-v0.1.Q4_K_M.gguf
-   cd ..
+   poe smart-run
    ```
 
 ## Configuration

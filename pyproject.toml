@@ -107,7 +107,12 @@ else:
 
 test-weather = "python tests/weather.py"
 
+test-llm = "python tests/test_llm.py"
+
+test-llm-interactive = "python tests/interactive_llm_test.py"
+
 test-all = [
   #"test",
-  "test-weather"
+  "test-weather",
+  "test-llm"
 ]
