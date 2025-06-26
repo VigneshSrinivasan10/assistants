@@ -27,7 +27,8 @@ def test_weather_queries():
             "the weather in the evening?",
             "the weather in London?",
             "the weather tomorrow",
-            "the rain and day" # just to check errors from transcription
+            "the rain and day", # just to check errors from transcription
+            "when will the rain stop?"
         ]
         
         for query in test_queries:

@@ -322,6 +322,20 @@ class WeatherForecast:
             r'\b(forecast\s+)(for|in)',
         ]
         
+        # Rain-specific patterns
+        rain_patterns = [
+            r'\b(when\s+will\s+)(the\s+)?rain\s+(stop|end)',
+            r'\b(how\s+long\s+)(will\s+)?(it\s+)?(keep\s+)?(raining|rain)',
+            r'\b(is\s+it\s+)(still\s+)?(raining|going\s+to\s+rain)',
+            r'\b(when\s+does\s+)(the\s+)?rain\s+(stop|end)',
+            r'\b(rain\s+)(stop|end|continue)',
+        ]
+        
+        # Check for rain-specific patterns first
+        for pattern in rain_patterns:
+            if re.search(pattern, text_lower):
+                return True
+        
         # Check for weather keywords
         for keyword in weather_keywords:
             if keyword in text_lower:
@@ -329,6 +343,47 @@ class WeatherForecast:
         
         # Check for weather patterns
         for pattern in weather_patterns:
+            if re.search(pattern, text_lower):
+                return True
+        
+        return False
+    
+    def _is_rain_query(self, text: str) -> bool:
+        """
+        Check if the query is specifically about rain patterns.
+        
+        Args:
+            text: The transcribed text
+            
+        Returns:
+            True if it's a rain-specific query, False otherwise
+        """
+        if not text:
+            return False
+            
+        text_lower = text.lower()
+        
+        # Rain-specific keywords and patterns
+        rain_keywords = ['rain', 'raining', 'drizzle', 'shower', 'precipitation']
+        rain_patterns = [
+            r'\b(when\s+will\s+)(the\s+)?rain\s+(stop|end)',
+            r'\b(how\s+long\s+)(will\s+)?(it\s+)?(keep\s+)?(raining|rain)',
+            r'\b(is\s+it\s+)(still\s+)?(raining|going\s+to\s+rain)',
+            r'\b(when\s+does\s+)(the\s+)?rain\s+(stop|end)',
+            r'\b(rain\s+)(stop|end|continue)',
+            r'\b(will\s+)(it\s+)?(stop\s+)?(raining|rain)',
+            r'\b(how\s+much\s+)(longer\s+)?(will\s+)?(it\s+)?(rain|raining)',
+        ]
+        
+        # Check for rain keywords
+        for keyword in rain_keywords:
+            if keyword in text_lower:
+                # Additional check to ensure it's about rain timing, not just general weather
+                if any(word in text_lower for word in ['when', 'how long', 'stop', 'end', 'continue', 'still']):
+                    return True
+        
+        # Check for rain patterns
+        for pattern in rain_patterns:
             if re.search(pattern, text_lower):
                 return True
         
@@ -538,8 +593,14 @@ class WeatherForecast:
         Returns:
             Formatted weather response
         """
+        
         # Extract location and time reference
         location = self._extract_location(query)
+
+        # Check if this is a rain-specific query
+        if self._is_rain_query(query):
+            return self.process_rain_query(query, location)
+
         time_reference, time_period = self._parse_time_reference(query)
         
         logger.info(f"Processing weather query: location={location}, time={time_reference}")
@@ -549,6 +610,174 @@ class WeatherForecast:
         
         # Format response
         return self.format_weather_response(weather_data, time_period)
+
+    def _analyze_rain_pattern(self, location: str) -> Dict:
+        """
+        Analyze rain pattern to determine when rain will stop or how long it will continue.
+        
+        Args:
+            location: City name or coordinates
+            
+        Returns:
+            Dictionary containing rain analysis information
+        """
+        try:
+            # Get detailed forecast for next 24 hours (hourly data)
+            forecast_data = self.get_forecast(location, hours=24)
+            
+            if 'error' in forecast_data:
+                return forecast_data
+            
+            current_time = datetime.now()
+            rain_analysis = {
+                'is_currently_raining': False,
+                'rain_start_time': None,
+                'rain_end_time': None,
+                'rain_duration': None,
+                'rain_intensity': [],
+                'next_rain_periods': []
+            }
+            
+            # Check if it's currently raining
+            current_weather = self.get_current_weather(location)
+            if 'error' not in current_weather:
+                current_desc = current_weather.get('description', '').lower()
+                current_precip = current_weather.get('precipitation', 0)
+                rain_analysis['is_currently_raining'] = (
+                    any(word in current_desc for word in ['rain', 'drizzle', 'shower']) or
+                    current_precip > 0.1
+                )
+            
+            # Analyze forecast for rain patterns
+            rain_periods = []
+            current_rain_period = None
+            
+            for forecast in forecast_data['forecast']:
+                forecast_time = datetime.strptime(forecast['time'], '%Y-%m-%d %H:%M')
+                description = forecast.get('description', '').lower()
+                precipitation = forecast.get('precipitation', 0)
+                
+                is_raining = (
+                    any(word in description for word in ['rain', 'drizzle', 'shower']) or
+                    precipitation > 0.1
+                )
+                
+                if is_raining:
+                    if current_rain_period is None:
+                        # Start of new rain period
+                        current_rain_period = {
+                            'start_time': forecast_time,
+                            'intensity': []
+                        }
+                    current_rain_period['intensity'].append({
+                        'time': forecast_time,
+                        'description': description,
+                        'precipitation': precipitation
+                    })
+                else:
+                    if current_rain_period is not None:
+                        # End of rain period
+                        current_rain_period['end_time'] = forecast_time
+                        current_rain_period['duration'] = (
+                            current_rain_period['end_time'] - current_rain_period['start_time']
+                        ).total_seconds() / 3600  # Duration in hours
+                        rain_periods.append(current_rain_period)
+                        current_rain_period = None
+            
+            # Handle case where rain period extends beyond forecast
+            if current_rain_period is not None:
+                current_rain_period['end_time'] = None
+                current_rain_period['duration'] = None
+                rain_periods.append(current_rain_period)
+            
+            # Find current/next rain period
+            for period in rain_periods:
+                if period['start_time'] <= current_time:
+                    if period['end_time'] is None or period['end_time'] > current_time:
+                        # Currently raining
+                        rain_analysis['rain_start_time'] = period['start_time']
+                        rain_analysis['rain_end_time'] = period['end_time']
+                        if period['end_time']:
+                            rain_analysis['rain_duration'] = period['duration']
+                        rain_analysis['rain_intensity'] = period['intensity']
+                        break
+                else:
+                    # Future rain period
+                    rain_analysis['next_rain_periods'].append(period)
+            
+            return rain_analysis
+            
+        except Exception as e:
+            logger.error(f"Error analyzing rain pattern: {e}")
+            return {'error': f"Failed to analyze rain pattern: {str(e)}"}
+    
+    def _format_rain_analysis(self, rain_analysis: Dict) -> str:
+        """
+        Format rain analysis into a natural language response.
+        
+        Args:
+            rain_analysis: Rain analysis dictionary
+            
+        Returns:
+            Formatted rain analysis response
+        """
+        if 'error' in rain_analysis:
+            return f"Sorry, I couldn't analyze the rain pattern: {rain_analysis['error']}"
+        
+        if not rain_analysis['is_currently_raining']:
+            if rain_analysis['next_rain_periods']:
+                next_rain = rain_analysis['next_rain_periods'][0]
+                start_time = next_rain['start_time'].strftime('%H:%M')
+                return f"It's not currently raining. The next rain is expected to start around {start_time}."
+            else:
+                return "It's not currently raining and no significant rain is expected in the next 24 hours."
+        
+        # Currently raining
+        response = "It's currently raining. "
+        
+        if rain_analysis['rain_end_time']:
+            # We know when it will stop
+            end_time = rain_analysis['rain_end_time'].strftime('%H:%M').replace(':00', " o'clock").replace(':30', ' thirty').replace(':15', ' quarter past').replace(':45', ' quarter to')
+            duration = rain_analysis['rain_duration']
+            
+            if duration:
+                if duration < 1:
+                    response += f"The rain should stop around {end_time}."
+                elif duration < 2:
+                    response += f"The rain should stop around {end_time}."
+                else:
+                    response += f"The rain should stop around {end_time}."
+            else:
+                response += f"The rain should stop around {end_time}."
+        else:
+            # Rain extends beyond our forecast
+            response += "The rain is expected to continue for several more hours."
+        
+        # Add intensity information if available
+        if rain_analysis['rain_intensity']:
+            intensities = [entry['description'] for entry in rain_analysis['rain_intensity']]
+            if len(set(intensities)) > 1:
+                response += f" The intensity varies from {intensities[0]} to {intensities[-1]}."
+        
+        return response
+    
+    def process_rain_query(self, query: str, location: str = None) -> str:
+        """
+        Process a natural language rain-related query.
+        
+        Args:
+            query: Natural language rain query
+            
+        Returns:
+            Formatted rain analysis response
+        """
+        logger.info(f"Processing rain query: location={location}")
+        
+        # Analyze rain pattern
+        rain_analysis = self._analyze_rain_pattern(location)
+        
+        # Format response
+        return self._format_rain_analysis(rain_analysis)
 
 # Example usage and testing
 def test_weather_queries():
@@ -563,7 +792,12 @@ def test_weather_queries():
             "Is it raining now?",
             "the weather in the evening?",
             "the weather in London?",
-            "the weather tomorrow"
+            "the weather tomorrow",
+            "When will the rain stop?",
+            "How long will it keep raining?",
+            "Is it still raining?",
+            "When does the rain end?",
+            "Will it stop raining soon?"
         ]
         
         for query in test_queries:

@@ -55,32 +55,32 @@ addopts = "-v --tb=short"
 
 [tool.poe.tasks]
 install = """
-python -c "
-import os, subprocess, sys
-venv_dir = '.venv'
-if not os.path.exists(venv_dir):
-    print('🧪 Creating virtual environment...')
-    subprocess.run([sys.executable, '-m', 'venv', venv_dir], check=True)
+bash -c '
+# Check if uv is available
+if ! command -v uv &> /dev/null; then
+    echo "📦 uv not found. Installing..."
+    if pipx install uv; then
+        echo "✅ uv installed successfully"
+    else
+        echo "❌ Error installing uv"
+        exit 1
+    fi
+else
+    echo "✅ uv already installed"
+fi
 
-activate = os.path.join(venv_dir, 'Scripts' if os.name == 'nt' else 'bin', 'activate_this.py')
-exec(open(activate).read(), {'__file__': activate})
-
-try:
-    import uv
-except ImportError:
-    print('📦 uv not found. Installing...')
-    subprocess.run([sys.executable, '-m', 'pip', 'install', 'uv'], check=True)
-
-print('🔧 Syncing dependencies...')
-subprocess.run([sys.executable, '-m', 'uv', 'sync'], check=True)
-"
+echo "🔧 Syncing dependencies..."
+uv sync
+'
 """
 
 download-llm = """
-mkdir -p models && \
-cd models && \
-wget -nc https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.1-GGUF/resolve/main/mistral-7b-instruct-v0.1.Q4_K_M.gguf  && \
-cd ..
+bash -c '
+mkdir -p models
+cd models 
+wget -nc https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.1-GGUF/resolve/main/mistral-7b-instruct-v0.1.Q4_K_M.gguf
+cd .. 
+'
 """
 
 run = { shell = "bash -c 'source .venv/bin/activate && assistant'" }
