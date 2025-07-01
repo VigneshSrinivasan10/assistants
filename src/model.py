@@ -8,6 +8,7 @@ from llama_cpp import Llama
 
 from src.util import timer
 from src.features.weather import WeatherForecast
+from src.features.memory import ConversationMemory
 
 class STT:
     def __init__(self, stt_model: str = "moonshine/base"):
@@ -32,20 +33,32 @@ class TTS:
         return self.tts_model.tts(text, options=self.options)
 
 class LLM:
-    def __init__(self, model_path: str, n_ctx: int):
+    def __init__(self, model_path: str, n_ctx: int, max_conversations: int = 10, memory_file: str = "./data/conversation_memory.json"):
         self.llm = Llama(model_path=model_path, 
                          n_ctx=n_ctx,
                          n_threads=16,
                          n_batch=16,
                          n_gpu_layers=0)
+        self.memory = ConversationMemory(max_conversations=max_conversations, save_file=memory_file)
         
     @timer
     def generate(self, prompt: str):
-        text_prompt = (
-            f"<|system|>\nYou are a helpful assistant.<|end|>\n"
-            f"<|user|>\n{prompt}\n<|end|>\n"
-            f"<|assistant|>\n"
-        )
+        # Get conversation history context
+        context = self.memory.get_context()
+        
+        # Build the complete prompt with memory context
+        if context:
+            text_prompt = (
+                f"<|system|>\nYou are a helpful assistant. Here is the conversation history:\n{context}\n<|end|>\n"
+                f"<|user|>\n{prompt}\n<|end|>\n"
+                f"<|assistant|>\n"
+            )
+        else:
+            text_prompt = (
+                f"<|system|>\nYou are a helpful assistant.<|end|>\n"
+                f"<|user|>\n{prompt}\n<|end|>\n"
+                f"<|assistant|>\n"
+            )
         
         response = self.llm(text_prompt, 
                             temperature=0.2, 
@@ -55,13 +68,21 @@ class LLM:
                             stop=["Q:", "\n"],
                             echo=False)
         return response["choices"][0]["text"].strip()
-        
+    
+    def add_to_memory(self, user_message: str, assistant_response: str):
+        """Add conversation to memory"""
+        self.memory.add_conversation(user_message, assistant_response)
+    
+    def get_memory_info(self) -> dict:
+        """Get information about the conversation memory"""
+        return self.memory.get_memory_info()
+
 class VoiceAssistant:
     def __init__(self, cfg: DictConfig):
         # Initialize models
         self.stt = STT(cfg.stt.model)
         self.tts = TTS(cfg.tts.model, cfg.tts.voice, cfg.tts.speed, cfg.tts.lang)
-        self.llm = LLM(cfg.llm.model_path, cfg.llm.n_ctx)
+        self.llm = LLM(cfg.llm.model_path, cfg.llm.n_ctx, cfg.llm.max_conversations, cfg.llm.memory_file)
         
         # Initialize features here such as weather forecast, etc.
         self.weather = WeatherForecast(provider="openmeteo")
@@ -90,6 +111,9 @@ class VoiceAssistant:
             self.latest_response = response_text
             print(f"Response: {response_text}")
             
+            # Add conversation to memory
+            self.llm.add_to_memory(transcription, response_text)
+            
              # Send response text to browser through AdditionalOutputs
             yield AdditionalOutputs({"role": "assistant", "content": response_text})
             
@@ -103,3 +127,7 @@ class VoiceAssistant:
         else:
             audio = None
             yield audio
+    
+    def get_memory_info(self) -> dict:
+        """Get information about the conversation memory"""
+        return self.llm.get_memory_info()

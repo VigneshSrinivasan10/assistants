@@ -21,4 +21,4 @@ src/outputs/
 
 # Dependencies
 requirements.txt
-uv.lock 
+uv.lock data/
