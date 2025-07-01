@@ -22,3 +22,4 @@ src/outputs/
 # Dependencies
 requirements.txt
 uv.lock data/
+data/conversation_memory.json
