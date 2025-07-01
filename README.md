@@ -6,6 +6,7 @@ A low-latency voice assistant that listens for commands and responds.
 
 - Responds to questions
 - Checks weather status 
+- Has a memory of the last 10 conversations
 
 ### To do
 - Fast song search and playback on Spotify
@@ -30,11 +31,13 @@ A low-latency voice assistant that listens for commands and responds.
     │   │       └── base.yaml
     │   └── features/
     │       ├── __init__.py
+    │       ├── memory.py
     │       └── weather.py
     └── tests/
         ├── __init__.py
+        ├── interactive_llm_test.py
+        ├── test_llm.py
         └── weather.py
-
 ```
 
 ## Installation
@@ -53,39 +56,17 @@ A low-latency voice assistant that listens for commands and responds.
    ```
    poe smart-run
    ```
+   Then open the link on your favorite browser: 
+   ```
+   http://127.0.0.1:7860
+   ```
+   and click on `start conversation`.  
 
-## Configuration
-
-All configuration is stored in `assistant/src/cli/conf/base.yaml`:
-
-### Models Used
-
-- Speech-to-text 
-Whisper simple model from the library `fastrtc_whisper_cpp`: 
-```small.en-q5_1```
-Smaller models like `base` and `tiny` can be used to make this faster but the quality suffers. 
-
-- LLM 
-Mistral 7B from TheBloke using the library `llama_cpp`: 
-```mistral-7b-instruct-v0.1.Q4_K_M.gguf``` 
-
-- Text-to-speech 
-Kokoro used within the library `fastrtc`.  
-
+## Usage
 ### Wake word and pause detection
 
 - By default, the wake word is set to `computer`. 
 - Pause detection and interruption is performed using the `fastrtc` library. 
-
-## Usage
-```
-assistant
-```
-Then open the link on your favorite browser: 
-```
-http://127.0.0.1:7860
-```
-and click on `start conversation`.  
 
 ## How it works
 
@@ -101,6 +82,23 @@ Response: The capital of Japan is Tokyo.
 ```
 ![Example Conversation](images/example_conversation.png)
 
+## Configuration
+
+All configuration is stored in `assistant/src/cli/conf/base.yaml`:
+
+### Models Used
+
+- Speech-to-text 
+Whisper simple model from the library `fastrtc_whisper_cpp`: 
+```small.en```
+Smaller models like `base` and `tiny` can be used to make this faster but the quality suffers. 
+
+- LLM 
+Mistral 7B from TheBloke using the library `llama_cpp`: 
+```mistral-7b-instruct-v0.1.Q4_K_M.gguf``` 
+
+- Text-to-speech 
+Kokoro used within the library `fastrtc`.  
 
 ## License
 
