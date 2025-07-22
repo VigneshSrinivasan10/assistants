@@ -78,10 +78,10 @@ uv sync
 
 download-llm = """
 bash -c '
-mkdir -p models
-cd models 
+mkdir -p voice_assistant/models
+cd voice_assistant/models 
 wget -nc https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.1-GGUF/resolve/main/mistral-7b-instruct-v0.1.Q4_K_M.gguf
-cd .. 
+cd ../..
 '
 """
 

@@ -21,7 +21,7 @@ def test_llm_loading():
     print("🔧 Testing LLM loading...")
     
     # Get the model path from the project structure
-    model_path = Path(__file__).parent.parent / "models" / "mistral-7b-instruct-v0.1.Q4_K_M.gguf"
+    model_path = Path(__file__).parent.parent / "voice_assistant" / "models" / "mistral-7b-instruct-v0.1.Q4_K_M.gguf"
     
     if not model_path.exists():
         print(f"❌ Model not found at: {model_path}")
