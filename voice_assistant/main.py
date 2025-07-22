@@ -21,11 +21,11 @@ def main(cfg: DictConfig):
     logger.info(f"Config: {OmegaConf.to_yaml(cfg)}")
     
     # Initialize models
-    voice_assistant = VoiceAssistant(cfg)
+    assistant = VoiceAssistant(cfg)
 
     # Create the pause-based handler for normal conversation
     pause_handler = ReplyOnPause(
-        voice_assistant.speech_to_speech,
+        assistant.speech_to_speech,
         algo_options=AlgoOptions(
             audio_chunk_duration=cfg.stream.algo_options.audio_chunk_duration,
             started_talking_threshold=cfg.stream.algo_options.started_talking_threshold,
@@ -47,7 +47,7 @@ def main(cfg: DictConfig):
         # Switch to pause handler after wake word is detected
         stream.handler = pause_handler
         # Process the audio with the pause handler
-        return voice_assistant.speech_to_speech(audio)
+        return assistant.speech_to_speech(audio)
 
     stop_word_handler = ReplyOnStopWords(
         on_wake_word_detected,
@@ -100,6 +100,6 @@ def main(cfg: DictConfig):
 
         return StreamingResponse(output_stream(), media_type="text/event-stream")
     
-    uvicorn.run(app, port=7860)
+    uvicorn.run(app, port=cfg.stream.port)
 if __name__ == "__main__":
     main()

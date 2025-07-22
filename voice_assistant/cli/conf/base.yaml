@@ -1,17 +1,25 @@
 stt:
+  _target_: voice_assistant.model.STT
   model: "small.en"
 
 tts:
+  _target_: voice_assistant.model.TTS
   model: "kokoro"
   voice: "af_heart"
   speed: 1.0
   lang: "en-us"
 
 llm:
+  _target_: voice_assistant.model.LLM
   model_path: "models/mistral-7b-instruct-v0.1.Q4_K_M.gguf"
   n_ctx: 2048
   max_conversations: 10
   memory_file: "data/conversation_memory.json"
+  temperature: 0.2
+  top_p: 0.9
+  repeat_penalty: 1.2
+  max_tokens: 25
+  echo: false
 
 stream:
   wake_word: "computer"
@@ -29,3 +37,4 @@ stream:
     min_silence_duration_ms: 2000
     window_size_samples: 1024
     speech_pad_ms: 400
+  port: 7860
