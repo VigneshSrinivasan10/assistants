@@ -9,8 +9,8 @@ import sys
 import time
 from pathlib import Path
 
-# Add the src directory to the path so we can import our modules
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+# Add the voice_assistant directory to the path so we can import our modules
+sys.path.insert(0, str(Path(__file__).parent.parent / "voice_assistant"))
 
 from model import LLM
 from omegaconf import OmegaConf
@@ -22,7 +22,7 @@ def load_llm():
     
     # Get the model path from the project structure
     # Load configuration
-    with hydra.initialize_config_dir(version_base=None, config_dir="src/cli/conf"):
+    with hydra.initialize_config_dir(version_base=None, config_dir="voice_assistant/cli/conf"):
         cfg = hydra.compose(config_name="base")
         model_path = Path(cfg.model.path)
     if not model_path.exists():

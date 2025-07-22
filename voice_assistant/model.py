@@ -1,14 +1,14 @@
 import numpy as np
 from omegaconf import DictConfig
-import re
+from pathlib import Path
 
 from fastrtc import get_stt_model, get_tts_model, KokoroTTSOptions, AdditionalOutputs
 from fastrtc_whisper_cpp import get_stt_model as get_stt_model_whisper_cpp
 from llama_cpp import Llama
 
-from src.util import timer
-from src.features.weather import WeatherForecast
-from src.features.memory import ConversationMemory
+from voice_assistant.util import timer
+from voice_assistant.features.weather import WeatherForecast
+from voice_assistant.features.memory import ConversationMemory
 
 class STT:
     def __init__(self, stt_model: str = "moonshine/base"):
@@ -34,6 +34,9 @@ class TTS:
 
 class LLM:
     def __init__(self, model_path: str, n_ctx: int, max_conversations: int = 10, memory_file: str = "./data/conversation_memory.json"):
+        project_root = Path(__file__).parents[0]  # Go up to project root
+        model_path = str((project_root / model_path).resolve())
+        
         self.llm = Llama(model_path=model_path, 
                          n_ctx=n_ctx,
                          n_threads=16,

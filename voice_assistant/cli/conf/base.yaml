@@ -8,10 +8,10 @@ tts:
   lang: "en-us"
 
 llm:
-  model_path: "${hydra:runtime.cwd}/models/mistral-7b-instruct-v0.1.Q4_K_M.gguf"
+  model_path: "models/mistral-7b-instruct-v0.1.Q4_K_M.gguf"
   n_ctx: 2048
   max_conversations: 10
-  memory_file: "${hydra:runtime.cwd}/data/conversation_memory.json"
+  memory_file: "data/conversation_memory.json"
 
 stream:
   wake_word: "computer"

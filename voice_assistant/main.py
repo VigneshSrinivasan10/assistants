@@ -6,8 +6,8 @@ from omegaconf import DictConfig, OmegaConf
 from gradio.utils import get_space
 from fastrtc import Stream, ReplyOnPause, ReplyOnStopWords, AlgoOptions, SileroVadOptions
 from fastrtc import get_twilio_turn_credentials
-from src.model import VoiceAssistant
-from src.logger import setup_logging
+from voice_assistant.model import VoiceAssistant
+from voice_assistant.logger import setup_logging
 
 import uvicorn
 from fastapi import FastAPI
@@ -85,7 +85,7 @@ def main(cfg: DictConfig):
     @app.get("/")
     async def _():
         rtc_config = get_twilio_turn_credentials() if get_space() else None
-        html_content = files('src').joinpath('index.html').read_text()
+        html_content = files('voice_assistant').joinpath('index.html').read_text()
         html_content = html_content.replace("__RTC_CONFIGURATION__", json.dumps(rtc_config))
         return HTMLResponse(content=html_content)
 

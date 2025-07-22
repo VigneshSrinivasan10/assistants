@@ -34,17 +34,19 @@ dependencies = [
 torch = [
     { index = "pytorch-cpu" },
 ]
+assistants = { workspace = true }
 
 [[tool.uv.index]]
 name = "pytorch-cpu"
 url = "https://download.pytorch.org/whl/cpu"
 explicit = true
 
-[tool.setuptools]
-packages = ["src"]  # Specify only the package(s) you want
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["voice_assistant"]
 
 [project.scripts]
-assistant = "src.main:main"
+assistant = "voice_assistant.main:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -115,4 +117,14 @@ test-all = [
   #"test",
   "test-weather",
   "test-llm"
+]
+
+[dependency-groups]
+dev = [
+    "assistants",
+]
+
+[project.optional-dependencies]
+dev = [
+    "assistants",
 ]

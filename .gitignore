@@ -13,7 +13,7 @@ dist/
 .env.template
 
 # Model files
-models/
+voice_assistant/models/
 
 # Output directories
 outputs/
@@ -21,5 +21,6 @@ src/outputs/
 
 # Dependencies
 requirements.txt
-uv.lock data/
-data/conversation_memory.json
+uv.lock 
+voice_assistant/data/
+voice_assistant/data/conversation_memory.json
