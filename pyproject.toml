@@ -96,7 +96,7 @@ start = [
 smart-run = """
 python -c '
 import os
-if not os.path.exists(".venv") or not os.path.exists("models/mistral-7b-instruct-v0.1.Q4_K_M.gguf"):
+if not os.path.exists(".venv") or not os.path.exists("voice_assistant/models/mistral-7b-instruct-v0.1.Q4_K_M.gguf"):
     print("🔧 First-time setup...")
     os.system("poe start")
 else:

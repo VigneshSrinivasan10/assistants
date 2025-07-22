@@ -1,7 +1,7 @@
 import json
 import os
 from collections import deque
-from typing import Optional
+from pathlib import Path
 
 class ConversationMemory:
     def __init__(self, max_conversations: int = 10, save_file: str = "./data/conversation_memory.json"):
@@ -10,7 +10,8 @@ class ConversationMemory:
         self.conversations = deque(maxlen=max_conversations)
         # Full list for persistent storage (all conversations)
         self.all_conversations = []
-        self.save_file = save_file
+        project_root = Path(__file__).parents[1]  # Go up to project root
+        self.save_file = str((project_root / save_file).resolve())
         
         # Load existing conversations from file
         self.load_memory()
