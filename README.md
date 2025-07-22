@@ -17,7 +17,7 @@ A low-latency voice assistant that listens for commands and responds.
 └── assistants/
     ├── README.md
     ├── pyproject.toml
-    ├── src/
+    ├── voice_assistant/
     │   ├── __init__.py
     │   ├── index.html
     │   ├── logger.py
