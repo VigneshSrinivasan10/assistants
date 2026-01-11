@@ -78,14 +78,22 @@ class LLM:
                 f"<|assistant|>\n"
             )
 
-        response = self.llm(text_prompt, 
-                            temperature=self.temperature, 
-                            top_p=self.top_p, 
-                            repeat_penalty=self.repeat_penalty, 
+        response = self.llm(text_prompt,
+                            temperature=self.temperature,
+                            top_p=self.top_p,
+                            repeat_penalty=self.repeat_penalty,
                             max_tokens=self.max_tokens,
                             stop=self.stop,
                             echo=self.echo)
-        return response["choices"][0]["text"].strip()
+
+        # Extract and clean the response text
+        response_text = response["choices"][0]["text"].strip()
+
+        # Remove any stop tokens that might have leaked through
+        for stop_token in self.stop:
+            response_text = response_text.replace(stop_token, "")
+
+        return response_text.strip()
     
     def add_to_memory(self, user_message: str, assistant_response: str):
         """Add conversation to memory"""
