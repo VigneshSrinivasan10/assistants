@@ -10,6 +10,7 @@ from llama_cpp import Llama
 from voice_assistant.util import timer
 from voice_assistant.features.weather import WeatherForecast
 from voice_assistant.features.memory import ConversationMemory
+from voice_assistant.routing import HandlerRegistry, WeatherHandler
 
 class STT:
     def __init__(self, model: str = "moonshine/base"):
@@ -112,7 +113,14 @@ class VoiceAssistant:
 
         # Initialize features here such as weather forecast, etc.
         self.weather = WeatherForecast(provider="openmeteo")
-        
+
+        # Setup hybrid routing system (fast path + LLM fallback)
+        self.router = HandlerRegistry()
+        self.router.register(WeatherHandler(self.weather, priority=10))
+        # Future handlers can be registered here:
+        # self.router.register(CalculatorHandler(priority=8))
+        # self.router.register(ReminderHandler(priority=9))
+
         self.latest_transcription = None
         self.latest_response = None
 
@@ -122,19 +130,20 @@ class VoiceAssistant:
         self.latest_transcription = transcription
         print(f"Transcription: {transcription}")
 
-        yield AdditionalOutputs({"role": "user", "content": transcription})     
+        yield AdditionalOutputs({"role": "user", "content": transcription})
 
         if transcription not in ["", " ", None]:
 
-            if self.weather._is_weather_query(transcription):
-                print(f"Weather query detected, routing to weather system...")
-                # Route to weather forecast
-                response_text = self.weather.process_weather_query(transcription)
-            else: 
-                # LLM generate response
+            # Try routing to specialized handler first (fast path)
+            handler_name, response_text = self.router.route(transcription)
+
+            if response_text is None:
+                # Fallback to LLM for general conversation
+                handler_name = "LLM"
                 response_text = self.llm.generate(transcription)
-                
+
             self.latest_response = response_text
+            print(f"[Router] Handled by: {handler_name}")
             print(f"Response: {response_text}")
             
             # Add conversation to memory
@@ -157,3 +166,10 @@ class VoiceAssistant:
     def get_memory_info(self) -> dict:
         """Get information about the conversation memory"""
         return self.llm.get_memory_info()
+
+    def get_routing_info(self) -> dict:
+        """Get information about registered handlers"""
+        return {
+            "total_handlers": len(self.router),
+            "handlers": self.router.get_handlers_info()
+        }
