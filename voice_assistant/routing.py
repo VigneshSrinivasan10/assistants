@@ -230,3 +230,91 @@ class ReminderHandler(Handler):
 
     def get_keywords(self) -> List[str]:
         return ['remind', 'reminder', 'schedule', 'set alarm', 'alarm']
+
+
+class SpotifyHandler(Handler):
+    """Handler for Spotify music playback queries."""
+
+    def __init__(self, spotify_service, priority: int = 9):
+        """
+        Initialize Spotify handler.
+
+        Args:
+            spotify_service: SpotifyService instance
+            priority: Priority level (default: 9 - high)
+        """
+        super().__init__(name="Spotify", priority=priority)
+        self.spotify = spotify_service
+
+    def can_handle(self, query: str) -> bool:
+        """Check if query is Spotify-related using keyword matching."""
+        query_lower = query.lower()
+
+        # Playback control keywords
+        playback_keywords = ['play', 'pause', 'stop', 'resume', 'skip', 'next', 'previous', 'back']
+        music_keywords = ['song', 'music', 'track', 'artist', 'album', 'spotify']
+        status_keywords = ['playing', "what's playing", 'now playing', 'current song']
+
+        # Check for playback control + music context
+        has_playback = any(keyword in query_lower for keyword in playback_keywords)
+        has_music_context = any(keyword in query_lower for keyword in music_keywords)
+        has_status = any(keyword in query_lower for keyword in status_keywords)
+
+        # Match if it's clearly music-related
+        return (has_playback and has_music_context) or has_status or 'spotify' in query_lower
+
+    def process(self, query: str) -> str:
+        """Process Spotify query."""
+        query_lower = query.lower()
+
+        # Pause/Stop
+        if any(word in query_lower for word in ['pause', 'stop']):
+            return self.spotify.pause_playback()
+
+        # Resume
+        if 'resume' in query_lower or (('play' in query_lower or 'start' in query_lower)
+                                       and 'music' in query_lower
+                                       and not any(word in query_lower for word in ['song', 'track', 'artist', 'album', 'play '])):
+            return self.spotify.resume_playback()
+
+        # Next track
+        if 'next' in query_lower or 'skip' in query_lower:
+            return self.spotify.next_track()
+
+        # Previous track
+        if 'previous' in query_lower or 'back' in query_lower or 'last' in query_lower:
+            return self.spotify.previous_track()
+
+        # Now playing / What's playing
+        if any(phrase in query_lower for phrase in ['now playing', "what's playing", 'current song', 'playing now']):
+            return self.spotify.get_now_playing()
+
+        # Play specific content
+        if 'play' in query_lower:
+            # Extract what to play (everything after "play")
+            import re
+
+            # Try to extract artist intent
+            artist_match = re.search(r'play\s+(?:songs?\s+by\s+|music\s+by\s+|)([\w\s]+?)(?:\s+by\s+|\s+on\s+spotify|$)', query_lower)
+            if 'artist' in query_lower or 'by' in query_lower:
+                if artist_match:
+                    artist = artist_match.group(1).strip()
+                    return self.spotify.search_and_play_artist(artist)
+
+            # Extract song/track to play
+            play_match = re.search(r'play\s+(?:the\s+song\s+|the\s+track\s+|song\s+|track\s+|)(.*?)(?:\s+by\s+|\s+on\s+spotify|$)', query_lower)
+            if play_match:
+                track_query = play_match.group(1).strip()
+                if track_query:
+                    return self.spotify.play_track(track_query)
+
+        # Default fallback
+        return "I'm not sure what you want to do with Spotify. Try saying 'play [song name]' or 'pause music'."
+
+    def get_keywords(self) -> List[str]:
+        """Return Spotify-related keywords."""
+        return [
+            'play', 'pause', 'stop', 'resume', 'skip', 'next', 'previous',
+            'song', 'music', 'track', 'spotify', 'artist', 'album',
+            'now playing', 'what\'s playing', 'current song'
+        ]

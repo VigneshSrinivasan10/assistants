@@ -10,7 +10,11 @@ from llama_cpp import Llama
 from voice_assistant.util import timer
 from voice_assistant.features.weather import WeatherForecast
 from voice_assistant.features.memory import ConversationMemory
-from voice_assistant.routing import HandlerRegistry, WeatherHandler
+from voice_assistant.features.spotify import SpotifyService
+from voice_assistant.routing import HandlerRegistry, WeatherHandler, SpotifyHandler
+import logging
+
+logger = logging.getLogger(__name__)
 
 class STT:
     def __init__(self, model: str = "moonshine/base"):
@@ -114,9 +118,23 @@ class VoiceAssistant:
         # Initialize features here such as weather forecast, etc.
         self.weather = WeatherForecast(provider="openmeteo")
 
+        # Initialize Spotify service (optional - only if credentials are available)
+        self.spotify = None
+        try:
+            self.spotify = SpotifyService()
+            logger.info("Spotify service initialized successfully")
+        except (ValueError, Exception) as e:
+            logger.warning(f"Spotify service not initialized: {e}")
+            logger.info("Spotify features will be disabled. Set SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET to enable.")
+
         # Setup hybrid routing system (fast path + LLM fallback)
         self.router = HandlerRegistry()
         self.router.register(WeatherHandler(self.weather, priority=10))
+
+        # Register Spotify handler if service is available
+        if self.spotify:
+            self.router.register(SpotifyHandler(self.spotify, priority=9))
+
         # Future handlers can be registered here:
         # self.router.register(CalculatorHandler(priority=8))
         # self.router.register(ReminderHandler(priority=9))

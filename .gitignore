@@ -12,6 +12,9 @@ dist/
 .env
 .env.template
 
+# Spotify cache
+.spotify_cache
+
 # Model files
 voice_assistant/models/
 
