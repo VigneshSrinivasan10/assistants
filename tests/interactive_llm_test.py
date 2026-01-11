@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Interactive test script for the LLM model.
-This script allows you to chat directly with the Mistral-7B model.
+This script allows you to chat directly with the Mistral-7B model via Ollama.
 """
 
 import os
@@ -18,25 +18,19 @@ import hydra
 
 def load_llm():
     """Load the LLM model."""
-    print("🔧 Loading LLM model...")
-    
-    # Get the model path from the project structure
-    # Load configuration
-    with hydra.initialize_config_dir(version_base=None, config_dir="voice_assistant/cli/conf"):
-        cfg = hydra.compose(config_name="base")
-        model_path = Path(cfg.model.path)
-    if not model_path.exists():
-        print(f"❌ Model not found at: {model_path}")
-        print("Please run 'poe download-llm' first to download the model.")
-        return None
-    
+    print("🔧 Loading LLM model with Ollama...")
+
     try:
-        # Initialize the LLM with the same parameters as in the main app
-        llm = LLM(str(model_path), n_ctx=512)
-        print("✅ LLM loaded successfully!")
+        # Initialize the LLM with Ollama
+        llm = LLM(model_name="mistral:7b-instruct-q4_K_M")
+        print("✅ LLM loaded successfully with Ollama!")
         return llm
     except Exception as e:
         print(f"❌ Error loading LLM: {e}")
+        print("Please ensure:")
+        print("1. Ollama is installed (curl -fsSL https://ollama.com/install.sh | sh)")
+        print("2. Ollama service is running (ollama serve)")
+        print("3. Model is downloaded (poe download-llm or ollama pull mistral:7b-instruct-q4_K_M)")
         return None
 
 

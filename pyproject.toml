@@ -21,7 +21,7 @@ dependencies = [
     "fastrtc>=0.0.26",
     "fastrtc[vad]",
     "fastrtc[stopword]",
-    "llama-cpp-python",
+    "ollama",
     "torch==2.7.1+cpu",
     "soxr",
     "kokoro_onnx",
@@ -78,10 +78,17 @@ uv sync
 
 download-llm = """
 bash -c '
-mkdir -p voice_assistant/models
-cd voice_assistant/models 
-wget -nc https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.1-GGUF/resolve/main/mistral-7b-instruct-v0.1.Q4_K_M.gguf
-cd ../..
+echo "🔧 Pulling Mistral 7B model with Ollama (Q4 quantization)..."
+if ! command -v ollama &> /dev/null; then
+    echo "❌ Ollama not found. Please install Ollama first:"
+    echo "   curl -fsSL https://ollama.com/install.sh | sh"
+    exit 1
+fi
+
+# Pull Mistral 7B with Q4 quantization
+ollama pull mistral:7b-instruct-q4_K_M
+
+echo "✅ Mistral 7B model ready!"
 '
 """
 
@@ -96,7 +103,16 @@ start = [
 smart-run = """
 python -c '
 import os
-if not os.path.exists(".venv") or not os.path.exists("voice_assistant/models/mistral-7b-instruct-v0.1.Q4_K_M.gguf"):
+import subprocess
+
+# Check if Ollama model is available
+try:
+    result = subprocess.run(["ollama", "list"], capture_output=True, text=True, check=False)
+    has_model = "mistral" in result.stdout
+except FileNotFoundError:
+    has_model = False
+
+if not os.path.exists(".venv") or not has_model:
     print("🔧 First-time setup...")
     os.system("poe start")
 else:
