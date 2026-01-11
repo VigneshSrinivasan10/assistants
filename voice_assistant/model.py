@@ -5,7 +5,7 @@ import hydra
 
 from fastrtc import get_stt_model, get_tts_model, KokoroTTSOptions, AdditionalOutputs
 from fastrtc_whisper_cpp import get_stt_model as get_stt_model_whisper_cpp
-from llama_cpp import Llama
+import ollama
 
 from voice_assistant.util import timer
 from voice_assistant.features.weather import WeatherForecast
@@ -35,60 +35,61 @@ class TTS:
         return self.tts_model.tts(text, options=self.options)
 
 class LLM:
-    def __init__(self, model_path: str, 
-                        n_ctx: int, 
-                        max_conversations: int = 10, 
-                        memory_file: str = "./data/conversation_memory.json", 
-                        temperature: float = 0.2, 
-                        top_p: float = 0.9, 
-                        repeat_penalty: float = 1.2, 
-                        max_tokens: int = 50, 
-                        echo: bool = False):
-        project_root = Path(__file__).parents[0]  # Go up to project root
-        model_path = str((project_root / model_path).resolve())
-        
-        self.llm = Llama(model_path=model_path, 
-                         n_ctx=n_ctx,
-                         n_threads=16,
-                         n_batch=16,
-                         n_gpu_layers=0)
+    def __init__(self, model_name: str = "mistral:7b-instruct-q4_K_M",
+                        max_conversations: int = 10,
+                        memory_file: str = "./data/conversation_memory.json",
+                        temperature: float = 0.2,
+                        top_p: float = 0.9,
+                        repeat_penalty: float = 1.2,
+                        max_tokens: int = 50):
+        self.model_name = model_name
+        self.client = ollama.Client()
         self.memory = ConversationMemory(max_conversations=max_conversations, save_file=memory_file)
         self.temperature = temperature
         self.top_p = top_p
         self.repeat_penalty = repeat_penalty
         self.max_tokens = max_tokens
         self.stop = ["Q:", "\n", "<|end|>"]
-        self.echo = echo
         
     @timer
     def generate(self, prompt: str):
         # Get conversation history context
         context = self.memory.get_context()
-        
-        # Build the complete prompt with memory context
-        if context:
-            text_prompt = (
-                f"<|system|>\nYou are a helpful assistant. Here is the conversation history:\n{context}\n<|end|>\n"
-                f"<|user|>\n{prompt}\n<|end|>\n"
-                f"<|assistant|>\n"
-            )
-        else:
-            text_prompt = (
-                f"<|system|>\nYou are a helpful assistant.<|end|>\n"
-                f"<|user|>\n{prompt}\n<|end|>\n"
-                f"<|assistant|>\n"
-            )
 
-        response = self.llm(text_prompt,
-                            temperature=self.temperature,
-                            top_p=self.top_p,
-                            repeat_penalty=self.repeat_penalty,
-                            max_tokens=self.max_tokens,
-                            stop=self.stop,
-                            echo=self.echo)
+        # Build messages for Ollama chat API
+        messages = []
+
+        if context:
+            messages.append({
+                "role": "system",
+                "content": f"You are a helpful assistant. Here is the conversation history:\n{context}"
+            })
+        else:
+            messages.append({
+                "role": "system",
+                "content": "You are a helpful assistant."
+            })
+
+        messages.append({
+            "role": "user",
+            "content": prompt
+        })
+
+        # Call Ollama API
+        response = self.client.chat(
+            model=self.model_name,
+            messages=messages,
+            options={
+                "temperature": self.temperature,
+                "top_p": self.top_p,
+                "repeat_penalty": self.repeat_penalty,
+                "num_predict": self.max_tokens,
+                "stop": self.stop,
+            }
+        )
 
         # Extract and clean the response text
-        response_text = response["choices"][0]["text"].strip()
+        response_text = response["message"]["content"].strip()
 
         # Remove any stop tokens that might have leaked through
         for stop_token in self.stop:

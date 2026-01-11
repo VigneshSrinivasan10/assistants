@@ -11,15 +11,13 @@ tts:
 
 llm:
   _target_: voice_assistant.model.LLM
-  model_path: "models/mistral-7b-instruct-v0.1.Q4_K_M.gguf"
-  n_ctx: 2048
+  model_name: "mistral:7b-instruct-q4_K_M"
   max_conversations: 10
   memory_file: "data/conversation_memory.json"
   temperature: 0.2
   top_p: 0.9
   repeat_penalty: 1.2
   max_tokens: 25
-  echo: false
 
 stream:
   wake_word: "computer"

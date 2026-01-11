@@ -18,23 +18,19 @@ from util import timer
 
 def test_llm_loading():
     """Test that the LLM can be loaded successfully."""
-    print("🔧 Testing LLM loading...")
-    
-    # Get the model path from the project structure
-    model_path = Path(__file__).parent.parent / "voice_assistant" / "models" / "mistral-7b-instruct-v0.1.Q4_K_M.gguf"
-    
-    if not model_path.exists():
-        print(f"❌ Model not found at: {model_path}")
-        print("Please run 'poe download-llm' first to download the model.")
-        return False
-    
+    print("🔧 Testing LLM loading with Ollama...")
+
     try:
-        # Initialize the LLM with the same parameters as in the main app
-        llm = LLM(str(model_path), n_ctx=512)
-        print("✅ LLM loaded successfully!")
+        # Initialize the LLM with Ollama (model should be pulled via 'poe download-llm')
+        llm = LLM(model_name="mistral:7b-instruct-q4_K_M")
+        print("✅ LLM loaded successfully with Ollama!")
         return llm
     except Exception as e:
         print(f"❌ Error loading LLM: {e}")
+        print("Please ensure:")
+        print("1. Ollama is installed (curl -fsSL https://ollama.com/install.sh | sh)")
+        print("2. Ollama service is running (ollama serve)")
+        print("3. Model is downloaded (poe download-llm)")
         return False
 
 
@@ -180,9 +176,10 @@ def main():
     print("\n" + "=" * 50)
     print("✅ LLM Test Suite completed!")
     print("\n💡 Tips:")
-    print("- If responses are slow, consider using a smaller model")
+    print("- If responses are slow, consider using a smaller model or different quantization")
     print("- If responses are poor quality, try adjusting temperature or other parameters")
-    print("- The model uses llama-cpp-python for inference")
+    print("- The model uses Ollama for inference with Mistral 7B Q4 quantization")
+    print("- To check available models: ollama list")
 
 
 if __name__ == "__main__":
