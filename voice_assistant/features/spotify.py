@@ -56,14 +56,37 @@ class SpotifyService:
     def _authenticate(self):
         """Authenticate with Spotify using OAuth."""
         try:
+            # Check if we already have a cached token
+            cache_exists = os.path.exists(self.cache_path)
+            
             auth_manager = SpotifyOAuth(
                 client_id=self.client_id,
                 client_secret=self.client_secret,
                 redirect_uri=self.redirect_uri,
                 scope=self.scope,
                 cache_path=self.cache_path,
-                open_browser=True
+                # Use manual flow (no local server) for first-time auth
+                # This avoids issues with "insecure redirect URI" errors
+                open_browser=cache_exists  # Only auto-open if we have cached token
             )
+            
+            # If no cache, do manual auth flow
+            if not cache_exists:
+                auth_url = auth_manager.get_authorize_url()
+                print("\n" + "="*60)
+                print("SPOTIFY AUTHENTICATION REQUIRED")
+                print("="*60)
+                print(f"\n1. Open this URL in your browser:\n\n{auth_url}\n")
+                print("2. Log in to Spotify and click 'Agree'")
+                print("3. You'll be redirected to a URL starting with your redirect URI")
+                print("4. Copy the ENTIRE URL from your browser's address bar")
+                print("   (It will look like: http://...?code=...)")
+                print("\n" + "="*60)
+                
+                response_url = input("\nPaste the URL you were redirected to: ").strip()
+                code = auth_manager.parse_response_code(response_url)
+                auth_manager.get_access_token(code)
+            
             self.sp = spotipy.Spotify(auth_manager=auth_manager)
             logger.info("Successfully authenticated with Spotify")
         except Exception as e:
