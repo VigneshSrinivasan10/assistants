@@ -7,6 +7,7 @@ Features:
 - LLM fallback for complex queries
 - Priority-based routing
 """
+import re
 from abc import ABC, abstractmethod
 from typing import List, Optional, Tuple
 import logging
@@ -195,43 +196,6 @@ class WeatherHandler(Handler):
         ]
 
 
-# Example handlers for future implementation
-class CalculatorHandler(Handler):
-    """Handler for math calculations (placeholder for future)."""
-
-    def __init__(self, priority: int = 8):
-        super().__init__(name="Calculator", priority=priority)
-
-    def can_handle(self, query: str) -> bool:
-        # TODO: Implement math detection
-        return False
-
-    def process(self, query: str) -> str:
-        # TODO: Implement calculation
-        return "Calculator not yet implemented"
-
-    def get_keywords(self) -> List[str]:
-        return ['calculate', 'multiply', 'divide', 'add', 'subtract', 'math']
-
-
-class ReminderHandler(Handler):
-    """Handler for reminders (placeholder for future)."""
-
-    def __init__(self, priority: int = 9):
-        super().__init__(name="Reminder", priority=priority)
-
-    def can_handle(self, query: str) -> bool:
-        # TODO: Implement reminder detection
-        return False
-
-    def process(self, query: str) -> str:
-        # TODO: Implement reminder creation
-        return "Reminder not yet implemented"
-
-    def get_keywords(self) -> List[str]:
-        return ['remind', 'reminder', 'schedule', 'set alarm', 'alarm']
-
-
 class SpotifyHandler(Handler):
     """Handler for Spotify music playback queries."""
 
@@ -257,7 +221,6 @@ class SpotifyHandler(Handler):
 
         # "play" is special - it can work alone with a target (e.g., "play Beatles")
         # Match "play" followed by something (not just "play" alone)
-        import re
         play_match = re.match(r'^play\s+.+', query_lower)
 
         # Check for other playback controls + music context
@@ -279,8 +242,6 @@ class SpotifyHandler(Handler):
 
     def process(self, query: str) -> str:
         """Process Spotify query."""
-        import re
-        
         # Clean up query: lowercase and remove trailing punctuation
         query_lower = query.lower().strip()
         query_lower = re.sub(r'[.!?]+$', '', query_lower)

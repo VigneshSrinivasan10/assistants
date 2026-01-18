@@ -92,8 +92,6 @@ def main(cfg: DictConfig):
     @app.get("/outputs")
     def _(webrtc_id: str):
         async def output_stream():
-            import json
-
             async for output in stream.output_stream(webrtc_id):
                 s = json.dumps(output.args[0])
                 yield f"event: output\ndata: {s}\n\n"
