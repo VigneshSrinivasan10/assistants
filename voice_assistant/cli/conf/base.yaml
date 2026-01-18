@@ -1,6 +1,6 @@
 stt:
   _target_: voice_assistant.model.STT
-  model: "small.en"
+  model: "base.en"
 
 tts:
   _target_: voice_assistant.model.TTS

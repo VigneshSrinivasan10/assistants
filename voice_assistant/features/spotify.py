@@ -4,8 +4,17 @@ import os
 import logging
 from typing import Optional, Dict, List
 import re
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 logger = logging.getLogger(__name__)
+
+# Get the project root directory (two levels up from this file)
+_PROJECT_ROOT = Path(__file__).parent.parent.parent
+_DEFAULT_CACHE_PATH = str(_PROJECT_ROOT / ".spotify_cache")
 
 class SpotifyService:
     """Service for interacting with Spotify API."""
@@ -14,8 +23,8 @@ class SpotifyService:
         self,
         client_id: Optional[str] = None,
         client_secret: Optional[str] = None,
-        redirect_uri: str = "http://localhost:8888/callback",
-        cache_path: str = ".spotify_cache"
+        redirect_uri: Optional[str] = None,
+        cache_path: Optional[str] = None
     ):
         """
         Initialize Spotify service.
@@ -23,13 +32,13 @@ class SpotifyService:
         Args:
             client_id: Spotify application client ID (from env if not provided)
             client_secret: Spotify application client secret (from env if not provided)
-            redirect_uri: OAuth redirect URI
-            cache_path: Path to cache authentication tokens
+            redirect_uri: OAuth redirect URI (from SPOTIFY_REDIRECT_URI env if not provided)
+            cache_path: Path to cache authentication tokens (defaults to project root)
         """
         self.client_id = client_id or os.getenv("SPOTIFY_CLIENT_ID")
         self.client_secret = client_secret or os.getenv("SPOTIFY_CLIENT_SECRET")
-        self.redirect_uri = redirect_uri
-        self.cache_path = cache_path
+        self.redirect_uri = redirect_uri or os.getenv("SPOTIFY_REDIRECT_URI", "http://127.0.0.1:8888/callback")
+        self.cache_path = cache_path or _DEFAULT_CACHE_PATH
 
         if not self.client_id or not self.client_secret:
             raise ValueError(

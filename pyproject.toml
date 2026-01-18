@@ -29,6 +29,7 @@ dependencies = [
     "requests",
     "pytest",
     "spotipy",
+    "python-dotenv",
 ]
 
 [tool.uv.sources]

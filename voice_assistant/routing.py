@@ -251,21 +251,39 @@ class SpotifyHandler(Handler):
         query_lower = query.lower()
 
         # Playback control keywords
-        playback_keywords = ['play', 'pause', 'stop', 'resume', 'skip', 'next', 'previous', 'back']
+        playback_keywords = ['pause', 'stop', 'resume', 'skip', 'next', 'previous', 'back']
         music_keywords = ['song', 'music', 'track', 'artist', 'album', 'spotify']
         status_keywords = ['playing', "what's playing", 'now playing', 'current song']
 
-        # Check for playback control + music context
-        has_playback = any(keyword in query_lower for keyword in playback_keywords)
+        # "play" is special - it can work alone with a target (e.g., "play Beatles")
+        # Match "play" followed by something (not just "play" alone)
+        import re
+        play_match = re.match(r'^play\s+.+', query_lower)
+
+        # Check for other playback controls + music context
+        has_playback_control = any(keyword in query_lower for keyword in playback_keywords)
         has_music_context = any(keyword in query_lower for keyword in music_keywords)
         has_status = any(keyword in query_lower for keyword in status_keywords)
 
-        # Match if it's clearly music-related
-        return (has_playback and has_music_context) or has_status or 'spotify' in query_lower
+        # Match if:
+        # 1. "play [something]" - direct play command
+        # 2. Other playback control + music context (e.g., "pause the music")
+        # 3. Status query (e.g., "what's playing")
+        # 4. Explicit "spotify" mention
+        return (
+            play_match is not None or
+            (has_playback_control and has_music_context) or
+            has_status or
+            'spotify' in query_lower
+        )
 
     def process(self, query: str) -> str:
         """Process Spotify query."""
-        query_lower = query.lower()
+        import re
+        
+        # Clean up query: lowercase and remove trailing punctuation
+        query_lower = query.lower().strip()
+        query_lower = re.sub(r'[.!?]+$', '', query_lower)
 
         # Pause/Stop
         if any(word in query_lower for word in ['pause', 'stop']):
@@ -291,18 +309,16 @@ class SpotifyHandler(Handler):
 
         # Play specific content
         if 'play' in query_lower:
-            # Extract what to play (everything after "play")
-            import re
-
-            # Try to extract artist intent
-            artist_match = re.search(r'play\s+(?:songs?\s+by\s+|music\s+by\s+|)([\w\s]+?)(?:\s+by\s+|\s+on\s+spotify|$)', query_lower)
-            if 'artist' in query_lower or 'by' in query_lower:
+            # Try to extract artist intent (e.g., "play songs by Beatles", "play music by Taylor Swift")
+            if 'by' in query_lower:
+                artist_match = re.search(r'play\s+(?:songs?\s+by\s+|music\s+by\s+|.*\s+by\s+)([\w\s]+)', query_lower)
                 if artist_match:
                     artist = artist_match.group(1).strip()
-                    return self.spotify.search_and_play_artist(artist)
+                    if artist:
+                        return self.spotify.search_and_play_artist(artist)
 
-            # Extract song/track to play
-            play_match = re.search(r'play\s+(?:the\s+song\s+|the\s+track\s+|song\s+|track\s+|)(.*?)(?:\s+by\s+|\s+on\s+spotify|$)', query_lower)
+            # Simple "play [something]" - extract everything after "play"
+            play_match = re.search(r'play\s+(?:the\s+song\s+|the\s+track\s+|song\s+|track\s+)?(.*)', query_lower)
             if play_match:
                 track_query = play_match.group(1).strip()
                 if track_query:

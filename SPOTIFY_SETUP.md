@@ -18,7 +18,7 @@ This voice assistant now supports Spotify playback control! You can play songs, 
 4. Fill in the app details:
    - **App name**: Voice Assistant (or any name you prefer)
    - **App description**: Personal voice assistant for Spotify control
-   - **Redirect URI**: `http://localhost:8888/callback`
+   - **Redirect URI**: `http://127.0.0.1:8888/callback`
    - **APIs used**: Select "Web API"
 5. Accept the terms and click **"Save"**
 6. Click on **"Settings"** to view your credentials
@@ -56,7 +56,7 @@ The first time you use a Spotify command, the assistant will:
 1. Open your default web browser for authentication
 2. Ask you to log in to Spotify (if not already logged in)
 3. Ask for permission to control your Spotify playback
-4. Redirect you to `http://localhost:8888/callback`
+4. Redirect you to `http://127.0.0.1:8888/callback`
 5. Save the authentication token in `.spotify_cache` (this file is in `.gitignore`)
 
 After this initial setup, you won't need to authenticate again unless the token expires.
@@ -113,7 +113,7 @@ The Spotify handler has **priority 9** (high priority), so music commands are qu
 
 **Solutions**:
 1. Check that your credentials in `.env` are correct
-2. Verify the redirect URI in your Spotify app settings is exactly: `http://localhost:8888/callback`
+2. Verify the redirect URI in your Spotify app settings is exactly: `http://127.0.0.1:8888/callback`
 3. Delete `.spotify_cache` and try authenticating again
 
 ### Browser doesn't open for authentication

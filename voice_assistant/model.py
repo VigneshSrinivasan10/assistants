@@ -2,6 +2,10 @@ import numpy as np
 from omegaconf import DictConfig
 from pathlib import Path
 import hydra
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 from fastrtc import get_stt_model, get_tts_model, KokoroTTSOptions, AdditionalOutputs
 from fastrtc_whisper_cpp import get_stt_model as get_stt_model_whisper_cpp
