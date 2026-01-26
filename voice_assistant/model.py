@@ -14,6 +14,7 @@ from llama_cpp import Llama
 from voice_assistant.util import timer
 from voice_assistant.features.weather import WeatherForecast
 from voice_assistant.features.memory import ConversationMemory
+from voice_assistant.features.smart_memory import SmartConversationMemory
 from voice_assistant.features.spotify import SpotifyService
 from voice_assistant.features.calculator import Calculator
 from voice_assistant.features.datetime_info import DateTimeInfo
@@ -92,6 +93,7 @@ class LLM:
                         n_ctx: int, 
                         max_conversations: int = 10, 
                         memory_file: str = "./data/conversation_memory.json", 
+                        use_smart_memory: bool = True,
                         temperature: float = 0.2, 
                         top_p: float = 0.9, 
                         repeat_penalty: float = 1.2, 
@@ -105,7 +107,23 @@ class LLM:
                          n_threads=16,
                          n_batch=16,
                          n_gpu_layers=0)
-        self.memory = ConversationMemory(max_conversations=max_conversations, save_file=memory_file)
+        
+        # Use smart memory by default (quality filtering + relevance scoring)
+        if use_smart_memory:
+            self.memory = SmartConversationMemory(
+                max_context_tokens=n_ctx // 2,  # Use half context for memory
+                quality_threshold=0.3,
+                relevance_threshold=0.2,
+                save_file=memory_file,
+            )
+            logger.info("Using SmartConversationMemory (quality filtering enabled)")
+        else:
+            self.memory = ConversationMemory(
+                max_conversations=max_conversations,
+                save_file=memory_file
+            )
+            logger.info("Using basic ConversationMemory (legacy mode)")
+        
         self.temperature = temperature
         self.top_p = top_p
         self.repeat_penalty = repeat_penalty
@@ -115,8 +133,11 @@ class LLM:
         
     @timer
     def generate(self, prompt: str):
-        # Get conversation history context
-        context = self.memory.get_context()
+        # Get conversation history context (with relevance scoring if smart memory)
+        if isinstance(self.memory, SmartConversationMemory):
+            context = self.memory.get_context(current_query=prompt)
+        else:
+            context = self.memory.get_context()
         
         # Build the complete prompt with memory context
         if context:
@@ -149,9 +170,12 @@ class LLM:
 
         return response_text.strip()
     
-    def add_to_memory(self, user_message: str, assistant_response: str):
-        """Add conversation to memory"""
-        self.memory.add_conversation(user_message, assistant_response)
+    def add_to_memory(self, user_message: str, assistant_response: str, handler: str = None):
+        """Add conversation to memory with optional handler info"""
+        if isinstance(self.memory, SmartConversationMemory):
+            self.memory.add_conversation(user_message, assistant_response, handler=handler)
+        else:
+            self.memory.add_conversation(user_message, assistant_response)
     
     def get_memory_info(self) -> dict:
         """Get information about the conversation memory"""
@@ -227,8 +251,8 @@ class VoiceAssistant:
             print(f"[Router] Handled by: {handler_name}")
             print(f"Response: {response_text}")
             
-            # Add conversation to memory
-            self.llm.add_to_memory(transcription, response_text)
+            # Add conversation to memory with handler info
+            self.llm.add_to_memory(transcription, response_text, handler=handler_name)
             
              # Send response text to browser through AdditionalOutputs
             yield AdditionalOutputs({"role": "assistant", "content": response_text})

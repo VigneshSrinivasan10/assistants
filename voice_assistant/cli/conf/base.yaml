@@ -14,8 +14,9 @@ llm:
   _target_: voice_assistant.model.LLM
   model_path: "models/mistral-7b-instruct-v0.1.Q4_K_M.gguf"
   n_ctx: 2048
-  max_conversations: 10
-  memory_file: "data/conversation_memory.json"
+  max_conversations: 10  # Legacy parameter (unused with smart memory)
+  memory_file: "data/smart_memory.json"  # New file for smart memory
+  use_smart_memory: true  # Enable quality filtering + relevance scoring
   temperature: 0.2
   top_p: 0.9
   repeat_penalty: 1.2
