@@ -1,6 +1,6 @@
 stt:
   _target_: voice_assistant.model.STT
-  model: "small.en"  # Better accuracy than base.en (~40% fewer errors)
+  model: "base.en"  # Fast and good enough accuracy
   use_gpu: true  # GPU auto-detected by whisper.cpp if CUDA available
 
 tts:
