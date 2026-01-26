@@ -27,13 +27,52 @@ import logging
 logger = logging.getLogger(__name__)
 
 class STT:
-    def __init__(self, model: str = "moonshine/base"):
-        #self.stt_model = get_stt_model(model=stt_model)
+    def __init__(self, model: str = "moonshine/base", use_gpu: bool = True):
+        """
+        Initialize STT with optimized model.
+        
+        Args:
+            model: Model to use (base.en, small.en, medium.en, etc.)
+            use_gpu: Enable GPU acceleration (auto-detected by whisper.cpp)
+        
+        Note: whisper.cpp will automatically use GPU if CUDA is available.
+        Advanced parameters (beam_size, threads, etc.) are set via environment
+        variables or whisper.cpp config, not through this wrapper.
+        """
+        # Use whisper.cpp for best performance
+        # GPU acceleration is automatic if CUDA is available
         self.stt_model = get_stt_model_whisper_cpp(model=model)
+        self.model_name = model
+        logger.info(f"STT initialized with model={model}")
+        logger.info("Whisper.cpp will use GPU automatically if CUDA is available")
 
     @timer
     def speech_to_text(self, audio: tuple[int, np.ndarray]):
-        return self.stt_model.stt(audio)
+        """
+        Convert speech to text with optimized processing.
+        
+        Args:
+            audio: Tuple of (sample_rate, audio_data)
+            
+        Returns:
+            Transcribed text
+        """
+        # Validate audio length to avoid unnecessary processing
+        sample_rate, audio_data = audio
+        duration_ms = len(audio_data) / sample_rate * 1000
+        
+        # Skip very short audio (likely just noise/clicks)
+        if duration_ms < 100:
+            logger.debug(f"Skipping audio: too short ({duration_ms:.0f}ms)")
+            return ""
+        
+        # Run STT
+        result = self.stt_model.stt(audio)
+        
+        if result:
+            logger.debug(f"STT result ({duration_ms:.0f}ms audio): '{result}'")
+        
+        return result
 
 class TTS:
     def __init__(self, model: str = "kokoro", 

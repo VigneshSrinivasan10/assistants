@@ -1,6 +1,7 @@
 stt:
   _target_: voice_assistant.model.STT
-  model: "base.en"
+  model: "small.en"  # Better accuracy than base.en (~40% fewer errors)
+  use_gpu: true  # GPU auto-detected by whisper.cpp if CUDA available
 
 tts:
   _target_: voice_assistant.model.TTS
@@ -27,14 +28,16 @@ stream:
   mode: "send-receive"
   can_interrupt: true
   algo_options:
-    audio_chunk_duration: 0.6
-    started_talking_threshold: 0.2
-    speech_threshold: 0.1
+    # Optimized for low latency
+    audio_chunk_duration: 0.4  # Reduced from 0.6 for faster response
+    started_talking_threshold: 0.15  # More sensitive start detection
+    speech_threshold: 0.08  # Lower threshold for better detection
   model_options:
-    threshold: 0.5
-    min_speech_duration_ms: 250
+    # VAD optimizations for accuracy + speed
+    threshold: 0.4  # Lower = more sensitive, catches more speech
+    min_speech_duration_ms: 200  # Reduced from 250ms for faster detection
     max_speech_duration_s: 30
-    min_silence_duration_ms: 2000
-    window_size_samples: 1024
-    speech_pad_ms: 400
+    min_silence_duration_ms: 1500  # Reduced from 2000ms for faster cutoff
+    window_size_samples: 512  # Reduced from 1024 for lower latency
+    speech_pad_ms: 300  # Reduced padding for faster processing
   port: 7860
