@@ -295,3 +295,93 @@ class SpotifyHandler(Handler):
             'song', 'music', 'track', 'spotify', 'artist', 'album',
             'now playing', 'what\'s playing', 'current song'
         ]
+
+
+class CalculatorHandler(Handler):
+    """Handler for math calculations."""
+
+    def __init__(self, calculator_service, priority: int = 8):
+        """
+        Initialize calculator handler.
+
+        Args:
+            calculator_service: Calculator instance
+            priority: Priority level (default: 8)
+        """
+        super().__init__(name="Calculator", priority=priority)
+        self.calculator = calculator_service
+
+    def can_handle(self, query: str) -> bool:
+        """Check if query is a math calculation."""
+        return self.calculator._is_math_query(query)
+
+    def process(self, query: str) -> str:
+        """Process math query."""
+        return self.calculator.calculate(query)
+
+    def get_keywords(self) -> List[str]:
+        """Return calculator-related keywords."""
+        return [
+            'calculate', 'compute', 'what is', 'plus', 'minus',
+            'times', 'divided', 'add', 'subtract', 'multiply'
+        ]
+
+
+class DateTimeHandler(Handler):
+    """Handler for date and time queries."""
+
+    def __init__(self, datetime_service, priority: int = 8):
+        """
+        Initialize datetime handler.
+
+        Args:
+            datetime_service: DateTimeInfo instance
+            priority: Priority level (default: 8)
+        """
+        super().__init__(name="DateTime", priority=priority)
+        self.datetime = datetime_service
+
+    def can_handle(self, query: str) -> bool:
+        """Check if query is about time/date."""
+        return self.datetime._is_time_query(query)
+
+    def process(self, query: str) -> str:
+        """Process time/date query."""
+        return self.datetime.get_time_info(query)
+
+    def get_keywords(self) -> List[str]:
+        """Return time/date-related keywords."""
+        return [
+            'time', 'clock', 'date', 'day', 'today',
+            'month', 'year', 'hour', 'minute'
+        ]
+
+
+class SystemInfoHandler(Handler):
+    """Handler for system information queries."""
+
+    def __init__(self, system_service, priority: int = 7):
+        """
+        Initialize system info handler.
+
+        Args:
+            system_service: SystemInfo instance
+            priority: Priority level (default: 7)
+        """
+        super().__init__(name="SystemInfo", priority=priority)
+        self.system = system_service
+
+    def can_handle(self, query: str) -> bool:
+        """Check if query is about system info."""
+        return self.system._is_system_query(query)
+
+    def process(self, query: str) -> str:
+        """Process system info query."""
+        return self.system.get_system_info(query)
+
+    def get_keywords(self) -> List[str]:
+        """Return system info-related keywords."""
+        return [
+            'cpu', 'processor', 'memory', 'ram', 'disk',
+            'storage', 'space', 'system', 'battery', 'performance'
+        ]

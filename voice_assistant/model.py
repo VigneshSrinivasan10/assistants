@@ -15,7 +15,13 @@ from voice_assistant.util import timer
 from voice_assistant.features.weather import WeatherForecast
 from voice_assistant.features.memory import ConversationMemory
 from voice_assistant.features.spotify import SpotifyService
-from voice_assistant.routing import HandlerRegistry, WeatherHandler, SpotifyHandler
+from voice_assistant.features.calculator import Calculator
+from voice_assistant.features.datetime_info import DateTimeInfo
+from voice_assistant.features.system_info import SystemInfo
+from voice_assistant.routing import (
+    HandlerRegistry, WeatherHandler, SpotifyHandler,
+    CalculatorHandler, DateTimeHandler, SystemInfoHandler
+)
 import logging
 
 logger = logging.getLogger(__name__)
@@ -121,6 +127,15 @@ class VoiceAssistant:
 
         # Initialize features here such as weather forecast, etc.
         self.weather = WeatherForecast(provider="openmeteo")
+        
+        # Initialize calculator
+        self.calculator = Calculator()
+        
+        # Initialize datetime info
+        self.datetime_info = DateTimeInfo()
+        
+        # Initialize system info
+        self.system_info = SystemInfo()
 
         # Initialize Spotify service (optional - only if credentials are available)
         self.spotify = None
@@ -133,15 +148,20 @@ class VoiceAssistant:
 
         # Setup hybrid routing system (fast path + LLM fallback)
         self.router = HandlerRegistry()
+        
+        # Register handlers by priority (highest first)
         self.router.register(WeatherHandler(self.weather, priority=10))
-
+        
         # Register Spotify handler if service is available
         if self.spotify:
             self.router.register(SpotifyHandler(self.spotify, priority=9))
-
-        # Future handlers can be registered here:
-        # self.router.register(CalculatorHandler(priority=8))
-        # self.router.register(ReminderHandler(priority=9))
+        
+        # Register other handlers
+        self.router.register(CalculatorHandler(self.calculator, priority=8))
+        self.router.register(DateTimeHandler(self.datetime_info, priority=8))
+        self.router.register(SystemInfoHandler(self.system_info, priority=7))
+        
+        logger.info(f"Registered {len(self.router)} handlers")
 
         self.latest_transcription = None
         self.latest_response = None

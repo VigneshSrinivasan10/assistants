@@ -30,6 +30,7 @@ dependencies = [
     "pytest",
     "spotipy",
     "python-dotenv",
+    "psutil",
 ]
 
 [tool.uv.sources]

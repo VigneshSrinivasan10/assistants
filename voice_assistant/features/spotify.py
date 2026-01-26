@@ -65,32 +65,47 @@ class SpotifyService:
                 redirect_uri=self.redirect_uri,
                 scope=self.scope,
                 cache_path=self.cache_path,
-                # Use manual flow (no local server) for first-time auth
-                # This avoids issues with "insecure redirect URI" errors
-                open_browser=cache_exists  # Only auto-open if we have cached token
+                open_browser=False  # Never auto-open, always manual
             )
             
             # If no cache, do manual auth flow
             if not cache_exists:
                 auth_url = auth_manager.get_authorize_url()
-                print("\n" + "="*60)
-                print("SPOTIFY AUTHENTICATION REQUIRED")
-                print("="*60)
-                print(f"\n1. Open this URL in your browser:\n\n{auth_url}\n")
+                print("\n" + "="*70)
+                print("🎵 SPOTIFY AUTHENTICATION REQUIRED")
+                print("="*70)
+                print(f"\n1. Open this URL in ANY browser (phone/PC/tablet):\n")
+                print(f"   {auth_url}\n")
                 print("2. Log in to Spotify and click 'Agree'")
-                print("3. You'll be redirected to a URL starting with your redirect URI")
-                print("4. Copy the ENTIRE URL from your browser's address bar")
-                print("   (It will look like: http://...?code=...)")
-                print("\n" + "="*60)
+                print("3. After clicking 'Agree', you'll see an error page OR blank page")
+                print("   ⚠️  This is NORMAL! The page doesn't matter.")
+                print("\n4. Look at the URL in your browser's address bar")
+                print("   It will look like: http://...?code=AQXXXXXXXXXXXXX")
+                print("\n5. Copy JUST THE CODE (the long string after 'code=')")
+                print("   Example: If URL is http://localhost:8888/callback?code=AQB123xyz")
+                print("            Copy only: AQB123xyz")
+                print("\n" + "="*70)
                 
-                response_url = input("\nPaste the URL you were redirected to: ").strip()
-                code = auth_manager.parse_response_code(response_url)
-                auth_manager.get_access_token(code)
+                auth_code = input("\n📋 Paste the code here: ").strip()
+                
+                # Clean up the code if user pasted full URL by mistake
+                if 'code=' in auth_code:
+                    auth_code = auth_code.split('code=')[1].split('&')[0]
+                
+                # Get access token using the code
+                token_info = auth_manager.get_access_token(auth_code, as_dict=True, check_cache=False)
+                
+                if not token_info:
+                    raise Exception("Failed to get access token")
+                
+                print("\n✅ Successfully authenticated with Spotify!\n")
             
             self.sp = spotipy.Spotify(auth_manager=auth_manager)
             logger.info("Successfully authenticated with Spotify")
         except Exception as e:
             logger.error(f"Failed to authenticate with Spotify: {e}")
+            print(f"\n❌ Authentication failed: {e}")
+            print("Try again or check your credentials in .env file")
             raise
 
     def search_track(self, query: str, limit: int = 1) -> Optional[Dict]:
