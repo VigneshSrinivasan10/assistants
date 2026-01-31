@@ -199,6 +199,9 @@ class WeatherHandler(Handler):
 class SpotifyHandler(Handler):
     """Handler for Spotify music playback queries."""
 
+    # Commands that require Premium for playback
+    PLAYBACK_KEYWORDS = ['play', 'pause', 'stop', 'resume', 'skip', 'next', 'previous', 'back']
+
     def __init__(self, spotify_service, priority: int = 9):
         """
         Initialize Spotify handler.
@@ -209,6 +212,11 @@ class SpotifyHandler(Handler):
         """
         super().__init__(name="Spotify", priority=priority)
         self.spotify = spotify_service
+
+    def _is_playback_command(self, query: str) -> bool:
+        """Check if the query is a playback command (requires Premium)."""
+        query_lower = query.lower()
+        return any(keyword in query_lower for keyword in self.PLAYBACK_KEYWORDS)
 
     def can_handle(self, query: str) -> bool:
         """Check if query is Spotify-related using keyword matching."""
@@ -242,6 +250,10 @@ class SpotifyHandler(Handler):
 
     def process(self, query: str) -> str:
         """Process Spotify query."""
+        # Check Premium requirement for playback commands
+        if self._is_playback_command(query) and not self.spotify.is_premium:
+            return "Spotify playback requires a Premium account."
+
         # Clean up query: lowercase and remove trailing punctuation
         query_lower = query.lower().strip()
         query_lower = re.sub(r'[.!?]+$', '', query_lower)

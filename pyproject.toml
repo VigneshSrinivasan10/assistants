@@ -31,6 +31,8 @@ dependencies = [
     "spotipy",
     "python-dotenv",
     "psutil",
+    "librespot",
+    "sounddevice",
 ]
 
 [tool.uv.sources]

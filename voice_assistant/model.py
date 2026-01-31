@@ -200,14 +200,20 @@ class VoiceAssistant:
         # Initialize system info
         self.system_info = SystemInfo()
 
-        # Initialize Spotify service (optional - only if credentials are available)
+        # Initialize Spotify service (optional - requires Premium account)
         self.spotify = None
         try:
             self.spotify = SpotifyService()
-            logger.info("Spotify service initialized successfully")
-        except (ValueError, Exception) as e:
+            if self.spotify.is_premium:
+                logger.info("Spotify service initialized with Premium account (direct playback enabled)")
+            else:
+                logger.warning("Spotify service initialized but Premium not detected (playback may not work)")
+        except RuntimeError as e:
             logger.warning(f"Spotify service not initialized: {e}")
-            logger.info("Spotify features will be disabled. Set SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET to enable.")
+            logger.info("Spotify features will be disabled. Premium account required for playback.")
+        except Exception as e:
+            logger.warning(f"Spotify service not initialized: {e}")
+            logger.info("Spotify features will be disabled.")
 
         # Setup hybrid routing system (fast path + LLM fallback)
         self.router = HandlerRegistry()
